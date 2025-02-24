@@ -1,2 +1,2 @@
-# streamlit_connect4_dqn-ai
+# streamlit_connect4_dqn_ai
 
