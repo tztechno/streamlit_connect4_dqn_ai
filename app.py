@@ -293,7 +293,6 @@ def main():
     
     # Display the game board if a game has started
     if st.session_state.game_started:
-        st.write("### Game Board")
         draw_board()
         
         # Display whose turn it is
