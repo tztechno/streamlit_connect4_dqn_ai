@@ -67,11 +67,16 @@ class Connect4AI:
         return [col for col in range(self.COLS) if board[0][col] == 0]
     
     def make_move(self, board, col, player):
-        board = board.copy()
+        # Create a deep copy of the board to avoid modifying the original
+        new_board = np.copy(board)
+        
+        # Find the lowest empty row in the selected column
         for row in range(self.ROWS-1, -1, -1):
-            if board[row][col] == 0:
-                board[row][col] = player
-                return board, row
+            if new_board[row][col] == 0:
+                new_board[row][col] = player
+                return new_board, row
+                
+        # If column is full, return original board and -1 to indicate invalid move
         return board, -1
     
     def check_winner(self, board, player):
