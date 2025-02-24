@@ -324,54 +324,66 @@ def main():
                     if st.button(f"{col}", key=f"col_{col}", disabled=button_disabled):
                         make_human_move(col)
     
+import streamlit as st
+
 def draw_board():
     """Draw the Connect 4 board using Streamlit"""
-    # Create a grid display
     board = st.session_state.board
-    cols = st.columns(7)
     
-    # Prepare cell styling
+    # CSS を定義（グリッドレイアウト）
     cell_style = """
     <style>
+    .board-container {
+        display: grid;
+        grid-template-columns: repeat(7, 50px);
+        grid-template-rows: repeat(6, 50px);
+        gap: 5px;
+        justify-content: center;
+    }
     .board-cell {
-        width: 40px;
-        height: 40px;
+        width: 50px;
+        height: 50px;
         border-radius: 50%;
-        display: inline-block;
-        margin: 2px;
         text-align: center;
-        line-height: 40px;
         font-size: 24px;
         font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     .empty-cell { background-color: #e0e0e0; }
     .player1-cell { background-color: #ff6b6b; color: white; }
     .player2-cell { background-color: #4ecdc4; color: white; }
     </style>
     """
+    
+    # CSS を適用
     st.markdown(cell_style, unsafe_allow_html=True)
     
-    # Display column labels
-    for col_idx, col in enumerate(cols):
-        with col:
-            st.markdown(f"<div style='text-align: center; font-weight: bold;'>{col_idx}</div>", unsafe_allow_html=True)
+    # グリッドコンテナを作成
+    board_html = '<div class="board-container">'
     
-    # Display the board cells
+    # 6×7 のマスを生成
     for row in range(6):
-        for col_idx, col in enumerate(cols):
-            with col:
-                cell_value = board[row][col_idx]
-                if cell_value == 0:
-                    cell_class = "empty-cell"
-                    symbol = ""
-                elif cell_value == 1:
-                    cell_class = "player1-cell"
-                    symbol = "X"
-                else:  # cell_value == -1
-                    cell_class = "player2-cell"
-                    symbol = "O"
-                
-                st.markdown(f"<div class='board-cell {cell_class}'>{symbol}</div>", unsafe_allow_html=True)
+        for col in range(7):
+            cell_value = board[row][col]
+            if cell_value == 0:
+                cell_class = "empty-cell"
+                symbol = ""
+            elif cell_value == 1:
+                cell_class = "player1-cell"
+                symbol = "X"
+            else:
+                cell_class = "player2-cell"
+                symbol = "O"
+            
+            board_html += f'<div class="board-cell {cell_class}">{symbol}</div>'
+    
+    board_html += '</div>'
+    
+    # Streamlit に表示
+    st.markdown(board_html, unsafe_allow_html=True)
+
 
 def make_human_move(col):
     """Make a human move in the specified column"""
