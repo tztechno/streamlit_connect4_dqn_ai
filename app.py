@@ -407,11 +407,6 @@ def draw_board():
                 st.session_state.selected_col = selected_col  # 選択した列を保存
                 break
 
-    # 選択された列の情報を表示（デバッグ用）
-    if "selected_col" in st.session_state:
-        st.write(f"選択された列: {st.session_state.selected_col + 1}")
-
-
 def make_human_move(col):
     """Make a human move in the specified column"""
     game = st.session_state.game
