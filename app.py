@@ -324,11 +324,12 @@ def main():
                     if st.button(f"{col}", key=f"col_{col}", disabled=button_disabled):
                         make_human_move(col)
 
+
 def draw_board():
     """Draw the Connect 4 board using Streamlit"""
     board = st.session_state.board
     
-    # CSS の定義（7×7 のグリッド）
+    # CSS 定義
     cell_style = """
     <style>
     .board-container {
@@ -356,6 +357,9 @@ def draw_board():
         background-color: #ddd;
         font-size: 18px;
         font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     </style>
     """
@@ -382,14 +386,30 @@ def draw_board():
             
             board_html += f'<div class="board-cell {cell_class}">{symbol}</div>'
     
-    # 7行目（Your Turn 表示用の行）
+    # 最下行（選択する列のボタン）
     for col in range(7):
-        board_html += f'<div class="board-cell turn-cell">Your Turn</div>'
+        board_html += f'<div class="board-cell turn-cell">{col + 1}</div>'
     
     board_html += '</div>'
     
     # Streamlit に表示
     st.markdown(board_html, unsafe_allow_html=True)
+
+    # プレイヤーのターンのためのボタンを作成
+    cols = st.columns(7)  # 7列のボタンを配置
+    
+    # ボタンを配置して選択された列を取得
+    for col_idx, col in enumerate(cols):
+        with col:
+            if st.button(f"↓", key=f"button_{col_idx}"):
+                selected_col = col_idx  # 選択された列
+                st.session_state.selected_col = selected_col  # 選択した列を保存
+                break
+
+    # 選択された列の情報を表示（デバッグ用）
+    if "selected_col" in st.session_state:
+        st.write(f"選択された列: {st.session_state.selected_col + 1}")
+
 
 
 def make_human_move(col):
