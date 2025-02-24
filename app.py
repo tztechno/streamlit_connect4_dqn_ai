@@ -325,6 +325,7 @@ def main():
                         make_human_move(col)
 
 
+
 def draw_board():
     """Draw the Connect 4 board using Streamlit"""
     board = st.session_state.board
@@ -335,7 +336,7 @@ def draw_board():
     .board-container {
         display: grid;
         grid-template-columns: repeat(7, 50px);
-        grid-template-rows: repeat(7, 50px);
+        grid-template-rows: repeat(6, 50px) 50px;  /* 6行目 + 7行目（ボタンの行） */
         gap: 5px;
         justify-content: center;
     }
@@ -386,9 +387,9 @@ def draw_board():
             
             board_html += f'<div class="board-cell {cell_class}">{symbol}</div>'
     
-    # 最下行（選択する列のボタン）
+    # 7行目（ボタンの行）
     for col in range(7):
-        board_html += f'<div class="board-cell turn-cell">{col}</div>'
+        board_html += f'<div class="board-cell turn-cell">↓</div>'
     
     board_html += '</div>'
     
@@ -405,6 +406,10 @@ def draw_board():
                 selected_col = col_idx  # 選択された列
                 st.session_state.selected_col = selected_col  # 選択した列を保存
                 break
+
+    # 選択された列の情報を表示（デバッグ用）
+    if "selected_col" in st.session_state:
+        st.write(f"選択された列: {st.session_state.selected_col + 1}")
 
 
 def make_human_move(col):
