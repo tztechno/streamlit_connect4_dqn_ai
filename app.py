@@ -323,20 +323,18 @@ def main():
                     button_disabled = col not in valid_moves
                     if st.button(f"{col}", key=f"col_{col}", disabled=button_disabled):
                         make_human_move(col)
-    
-import streamlit as st
 
 def draw_board():
     """Draw the Connect 4 board using Streamlit"""
     board = st.session_state.board
     
-    # CSS を定義（グリッドレイアウト）
+    # CSS の定義（7×7 のグリッド）
     cell_style = """
     <style>
     .board-container {
         display: grid;
         grid-template-columns: repeat(7, 50px);
-        grid-template-rows: repeat(6, 50px);
+        grid-template-rows: repeat(7, 50px);
         gap: 5px;
         justify-content: center;
     }
@@ -354,16 +352,21 @@ def draw_board():
     .empty-cell { background-color: #e0e0e0; }
     .player1-cell { background-color: #ff6b6b; color: white; }
     .player2-cell { background-color: #4ecdc4; color: white; }
+    .turn-cell {
+        background-color: #ddd;
+        font-size: 18px;
+        font-weight: bold;
+    }
     </style>
     """
     
-    # CSS を適用
+    # CSS 適用
     st.markdown(cell_style, unsafe_allow_html=True)
     
-    # グリッドコンテナを作成
+    # グリッドコンテナ作成
     board_html = '<div class="board-container">'
     
-    # 6×7 のマスを生成
+    # 6×7 のゲーム盤面を作成
     for row in range(6):
         for col in range(7):
             cell_value = board[row][col]
@@ -378,6 +381,10 @@ def draw_board():
                 symbol = "O"
             
             board_html += f'<div class="board-cell {cell_class}">{symbol}</div>'
+    
+    # 7行目（Your Turn 表示用の行）
+    for col in range(7):
+        board_html += f'<div class="board-cell turn-cell">Your Turn</div>'
     
     board_html += '</div>'
     
