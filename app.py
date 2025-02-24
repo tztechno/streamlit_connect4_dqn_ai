@@ -243,7 +243,6 @@ class Connect4AI:
 # Streamlit app
 def main():
     st.title("AI Connect 4")
-    st.write("Play Connect 4 against AI!")
     
     # Move training options to the sidebar
     with st.sidebar:
@@ -282,12 +281,12 @@ def main():
         st.header("Who goes first?")
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("I'll Go First (X)"):
+            if st.button("Human First (X)"):
                 reset_game(human_first=True)
                 st.session_state.game_started = True
                 st.rerun()
         with col2:
-            if st.button("AI Goes First (O)"):
+            if st.button("AI First (O)"):
                 reset_game(human_first=False)
                 st.session_state.game_started = True
                 st.rerun()
@@ -386,10 +385,6 @@ def draw_board():
                 symbol = "O"
             
             board_html += f'<div class="board-cell {cell_class}">{symbol}</div>'
-    
-    # 7行目（ボタンの行）
-    for col in range(7):
-        board_html += f'<div class="board-cell turn-cell">↓</div>'
     
     board_html += '</div>'
     
