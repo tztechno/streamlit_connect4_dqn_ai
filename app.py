@@ -242,8 +242,8 @@ class Connect4AI:
 
 # Streamlit app
 def main():
-    st.title("Connect 4 AI Game")
-    st.write("Play Connect 4 against a reinforcement learning AI!")
+    st.title("AI Connect 4")
+    st.write("Play Connect 4 against AI!")
     
     # Move training options to the sidebar
     with st.sidebar:
