@@ -240,6 +240,16 @@ def main():
     st.title("Connect 4 AI Game")
     st.write("Play Connect 4 against a reinforcement learning AI!")
     
+    # Move training options to the sidebar
+    with st.sidebar:
+        st.header("AI Training Options")
+        training_episodes = st.number_input("Training Episodes", min_value=100, max_value=50000, value=5000, step=100)
+        if st.button("Train AI"):
+            with st.spinner(f"Training AI for {training_episodes} episodes..."):
+                st.session_state.game.train(num_episodes=training_episodes)
+                st.session_state.game.save_model()
+            st.success("Training complete and model saved!")
+    
     # Initialize session state to store game state
     if 'board' not in st.session_state:
         st.session_state.board = np.zeros((6, 7))
@@ -259,54 +269,55 @@ def main():
         st.session_state.current_player = 1  # 1 for human, -1 for AI
     if 'human_player' not in st.session_state:
         st.session_state.human_player = 1  # 1 if human is player 1, -1 if human is player 2
+    if 'game_started' not in st.session_state:
+        st.session_state.game_started = False  # Track if game has started
     
-    # Options for starting a new game
-    with st.expander("Game Options", expanded=not st.session_state.game_over):
-        # Select who goes first
+    # Options for starting a new game - Always show these options unless a game is in progress
+    if not st.session_state.game_started or st.session_state.game_over:
+        st.header("Who goes first?")
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("I'll Go First (X)", disabled=not st.session_state.game_over):
+            if st.button("I'll Go First (X)"):
                 reset_game(human_first=True)
+                st.session_state.game_started = True
+                st.rerun()
         with col2:
-            if st.button("AI Goes First (O)", disabled=not st.session_state.game_over):
+            if st.button("AI Goes First (O)"):
                 reset_game(human_first=False)
+                st.session_state.game_started = True
+                st.rerun()
     
-    # Training options
-    with st.expander("AI Training Options"):
-        training_episodes = st.number_input("Training Episodes", min_value=100, max_value=50000, value=5000, step=100)
-        if st.button("Train AI"):
-            with st.spinner(f"Training AI for {training_episodes} episodes..."):
-                st.session_state.game.train(num_episodes=training_episodes)
-                st.session_state.game.save_model()
-            st.success("Training complete and model saved!")
-    
-    # Display the game board
-    st.write("### Game Board")
-    draw_board()
-    
-    # Display whose turn it is
-    if not st.session_state.game_over:
-        if st.session_state.current_player == st.session_state.human_player:
-            st.write("### Your Turn")
+    # Display the game board if a game has started
+    if st.session_state.game_started:
+        st.write("### Game Board")
+        draw_board()
+        
+        # Display whose turn it is
+        if not st.session_state.game_over:
+            if st.session_state.current_player == st.session_state.human_player:
+                st.write("### Your Turn")
+            else:
+                st.write("### AI's Turn")
+                # If it's AI's turn, make a move
+                make_ai_move()
+                st.rerun()  # Force a rerun to update the board after AI move
         else:
-            st.write("### AI's Turn")
-            # If it's AI's turn, make a move
-            make_ai_move()
-    else:
-        st.write(f"### {st.session_state.result_message}")
-        if st.button("Start New Game"):
-            reset_game(human_first=(st.session_state.human_player == 1))
-    
-    # Column buttons for human player
-    if not st.session_state.game_over and st.session_state.current_player == st.session_state.human_player:
-        valid_moves = st.session_state.game.get_valid_moves(st.session_state.board)
-        cols = st.columns(7)
-        for col in range(7):
-            with cols[col]:
-                # Check if this is a valid move
-                button_disabled = col not in valid_moves
-                if st.button(f"{col}", key=f"col_{col}", disabled=button_disabled):
-                    make_human_move(col)
+            st.write(f"### {st.session_state.result_message}")
+            if st.button("Start New Game"):
+                st.session_state.game_started = False
+                reset_game()
+                st.rerun()
+        
+        # Column buttons for human player
+        if not st.session_state.game_over and st.session_state.current_player == st.session_state.human_player:
+            valid_moves = st.session_state.game.get_valid_moves(st.session_state.board)
+            cols = st.columns(7)
+            for col in range(7):
+                with cols[col]:
+                    # Check if this is a valid move
+                    button_disabled = col not in valid_moves
+                    if st.button(f"{col}", key=f"col_{col}", disabled=button_disabled):
+                        make_human_move(col)
     
 def draw_board():
     """Draw the Connect 4 board using Streamlit"""
@@ -373,7 +384,7 @@ def make_human_move(col):
     # Switch players if game is not over
     if not st.session_state.game_over:
         st.session_state.current_player = -st.session_state.human_player
-        st.rerun()  # Fixed: Changed from st.experimental_rerun() to st.rerun()
+        st.rerun()
 
 def make_ai_move():
     """Make an AI move"""
@@ -384,11 +395,19 @@ def make_ai_move():
     # Get valid moves
     valid_moves = game.get_valid_moves(board)
     if not valid_moves:
+        # If no valid moves, it's a draw
+        st.session_state.game_over = True
+        st.session_state.result_message = "It's a draw! 🤝"
         return
     
-    # Get AI action
+    # Get AI action - ensure we get a valid move
     state = game.get_state(board)
     action = game.get_action(state, valid_moves, training=False)
+    
+    # Double-check that action is valid
+    if action not in valid_moves:
+        # If somehow we got an invalid move, just pick a random valid one
+        action = random.choice(valid_moves)
     
     # Make the move
     new_board, _ = game.make_move(board, action, ai_player)
