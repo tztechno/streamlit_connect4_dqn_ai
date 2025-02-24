@@ -1,3 +1,4 @@
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -372,7 +373,7 @@ def make_human_move(col):
     # Switch players if game is not over
     if not st.session_state.game_over:
         st.session_state.current_player = -st.session_state.human_player
-        st.experimental_rerun()
+        st.rerun()  # Fixed: Changed from st.experimental_rerun() to st.rerun()
 
 def make_ai_move():
     """Make an AI move"""
@@ -428,3 +429,4 @@ def reset_game(human_first=True):
 
 if __name__ == "__main__":
     main()
+
