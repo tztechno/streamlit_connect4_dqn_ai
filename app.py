@@ -388,7 +388,7 @@ def draw_board():
     
     # 最下行（選択する列のボタン）
     for col in range(7):
-        board_html += f'<div class="board-cell turn-cell">{col + 1}</div>'
+        board_html += f'<div class="board-cell turn-cell">{col}</div>'
     
     board_html += '</div>'
     
