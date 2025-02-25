@@ -1,5 +1,12 @@
 # streamlit_connect4_dqn_ai
 
+---
+
+The standard model was prepared by 1 million episodes.
+
+This model is almost genius.
+
+---
 
 Here's a summary of the changes I made to the Connect4 Streamlit app:
 
