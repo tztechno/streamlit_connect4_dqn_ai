@@ -318,30 +318,72 @@ def main():
         # AI model selection (separated for each AI player)
         st.subheader("AI Models")
         
-        # First AI (player 1 in AI vs Human or AI vs AI)
-        ai_models = ["None"] + st.session_state.ai_models
-        ai_model_1_idx = 0
-        if st.session_state.ai_model_1 in ai_models:
-            ai_model_1_idx = ai_models.index(st.session_state.ai_model_1)
-        
-        st.session_state.ai_model_1 = st.selectbox(
-            "Player 1 AI Model:", 
-            ai_models,
-            index=ai_model_1_idx,
-            key="ai_model_1_select"
-        )
-        
-        # Second AI (for AI vs AI mode)
-        ai_model_2_idx = 0
-        if st.session_state.ai_model_2 in ai_models:
-            ai_model_2_idx = ai_models.index(st.session_state.ai_model_2)
-        
-        st.session_state.ai_model_2 = st.selectbox(
-            "Player 2 AI Model:", 
-            ai_models,
-            index=ai_model_2_idx,
-            key="ai_model_2_select"
-        )
+        # Check if we have any models
+        if not st.session_state.ai_models:
+            st.warning("No AI models found. Please train an AI first.")
+        else:
+            # Display appropriate AI model selection based on game mode
+            if st.session_state.game_mode == 'human_vs_ai':
+                # For Human vs AI, select AI for player 2
+                ai_model_2_idx = 0
+                if st.session_state.ai_model_2 in st.session_state.ai_models:
+                    ai_model_2_idx = st.session_state.ai_models.index(st.session_state.ai_model_2)
+                elif len(st.session_state.ai_models) > 0:
+                    ai_model_2_idx = 0
+                
+                st.session_state.ai_model_2 = st.selectbox(
+                    "AI Model (Player 2):", 
+                    st.session_state.ai_models,
+                    index=ai_model_2_idx,
+                    key="ai_model_2_select"
+                )
+                # Reset AI model 1 since it's not used in this mode
+                st.session_state.ai_model_1 = None
+                
+            elif st.session_state.game_mode == 'ai_vs_human':
+                # For AI vs Human, select AI for player 1
+                ai_model_1_idx = 0
+                if st.session_state.ai_model_1 in st.session_state.ai_models:
+                    ai_model_1_idx = st.session_state.ai_models.index(st.session_state.ai_model_1)
+                elif len(st.session_state.ai_models) > 0:
+                    ai_model_1_idx = 0
+                
+                st.session_state.ai_model_1 = st.selectbox(
+                    "AI Model (Player 1):", 
+                    st.session_state.ai_models,
+                    index=ai_model_1_idx,
+                    key="ai_model_1_select"
+                )
+                # Reset AI model 2 since it's not used in this mode
+                st.session_state.ai_model_2 = None
+                
+            else:  # AI vs AI mode
+                # For AI vs AI, select models for both players
+                ai_model_1_idx = 0
+                if st.session_state.ai_model_1 in st.session_state.ai_models:
+                    ai_model_1_idx = st.session_state.ai_models.index(st.session_state.ai_model_1)
+                elif len(st.session_state.ai_models) > 0:
+                    ai_model_1_idx = 0
+                
+                st.session_state.ai_model_1 = st.selectbox(
+                    "AI Model (Player 1):", 
+                    st.session_state.ai_models,
+                    index=ai_model_1_idx,
+                    key="ai_model_1_select"
+                )
+                
+                ai_model_2_idx = 0
+                if st.session_state.ai_model_2 in st.session_state.ai_models:
+                    ai_model_2_idx = st.session_state.ai_models.index(st.session_state.ai_model_2)
+                elif len(st.session_state.ai_models) > 0:
+                    ai_model_2_idx = min(1, len(st.session_state.ai_models) - 1)  # Try to select second model if available
+                
+                st.session_state.ai_model_2 = st.selectbox(
+                    "AI Model (Player 2):", 
+                    st.session_state.ai_models,
+                    index=ai_model_2_idx,
+                    key="ai_model_2_select"
+                )
         
         # Training options
         st.header("AI Training Options")
@@ -350,46 +392,70 @@ def main():
             with st.spinner(f"Training AI for {training_episodes} episodes..."):
                 st.session_state.game.train(num_episodes=training_episodes)
                 # Final model is saved with episode count in the name
-                st.session_state.game.save_model(save_path=f"models/connect4_model_{training_episodes}.pth")
+                model_filename = f"connect4_model_{training_episodes}.pth"
+                st.session_state.game.save_model(save_path=f"models/{model_filename}")
                 # Refresh AI models list
                 model_dir = 'models'
                 if os.path.exists(model_dir):
                     st.session_state.ai_models = [f for f in os.listdir(model_dir) if f.endswith('.pth')]
-            st.success(f"Training complete! Model saved as connect4_model_{training_episodes}.pth")
+                # Set the newly trained model as the selected model based on game mode
+                if model_filename in st.session_state.ai_models:
+                    if st.session_state.game_mode == 'human_vs_ai':
+                        st.session_state.ai_model_2 = model_filename
+                    elif st.session_state.game_mode == 'ai_vs_human':
+                        st.session_state.ai_model_1 = model_filename
+            st.success(f"Training complete! Model saved as {model_filename}")
             st.rerun()  # Refresh the page to update AI models list
     
     # Start New Game button
     if not st.session_state.game_started or st.session_state.game_over:
-        if st.button("Start New Game"):
+        start_button_disabled = False
+        start_button_help = ""
+        
+        # Check if we can start a game
+        if st.session_state.game_mode == 'human_vs_ai' and (not st.session_state.ai_models or st.session_state.ai_model_2 is None):
+            start_button_disabled = True
+            start_button_help = "Please train or select an AI model for Player 2"
+        elif st.session_state.game_mode == 'ai_vs_human' and (not st.session_state.ai_models or st.session_state.ai_model_1 is None):
+            start_button_disabled = True
+            start_button_help = "Please train or select an AI model for Player 1"
+        elif st.session_state.game_mode == 'ai_vs_ai' and (not st.session_state.ai_models or st.session_state.ai_model_1 is None or st.session_state.ai_model_2 is None):
+            start_button_disabled = True
+            start_button_help = "Please train or select AI models for both players"
+            
+        if start_button_disabled:
+            st.warning(start_button_help)
+            
+        if st.button("Start New Game", disabled=start_button_disabled):
             # Configure game based on selected mode
             if st.session_state.game_mode == 'human_vs_ai':
                 reset_game(human_first=True)
-                # Load selected AI model if any
-                if st.session_state.ai_model_1 != "None":
-                    try:
-                        st.session_state.game.load_model(f"models/{st.session_state.ai_model_1}")
-                    except Exception as e:
-                        st.error(f"Error loading AI model: {e}")
+                # Load selected AI model
+                try:
+                    st.session_state.game.load_model(f"models/{st.session_state.ai_model_2}")
+                    st.success(f"Loaded AI model for Player 2: {st.session_state.ai_model_2}")
+                except Exception as e:
+                    st.error(f"Error loading AI model: {e}")
             elif st.session_state.game_mode == 'ai_vs_human':
                 reset_game(human_first=False)
-                # Load selected AI model if any
-                if st.session_state.ai_model_1 != "None":
-                    try:
-                        st.session_state.game.load_model(f"models/{st.session_state.ai_model_1}")
-                    except Exception as e:
-                        st.error(f"Error loading AI model: {e}")
+                # Load selected AI model
+                try:
+                    st.session_state.game.load_model(f"models/{st.session_state.ai_model_1}")
+                    st.success(f"Loaded AI model for Player 1: {st.session_state.ai_model_1}")
+                except Exception as e:
+                    st.error(f"Error loading AI model: {e}")
             else:  # AI vs AI
                 reset_game(ai_vs_ai=True)
                 # Load selected AI models
-                if st.session_state.ai_model_1 != "None" and st.session_state.ai_model_2 != "None":
-                    try:
-                        # For AI vs AI, we need to create a second AI instance
-                        if 'game2' not in st.session_state:
-                            st.session_state.game2 = Connect4AI()
-                        st.session_state.game.load_model(f"models/{st.session_state.ai_model_1}")
-                        st.session_state.game2.load_model(f"models/{st.session_state.ai_model_2}")
-                    except Exception as e:
-                        st.error(f"Error loading AI models: {e}")
+                try:
+                    # For AI vs AI, we need to create a second AI instance
+                    if 'game2' not in st.session_state:
+                        st.session_state.game2 = Connect4AI()
+                    st.session_state.game.load_model(f"models/{st.session_state.ai_model_1}")
+                    st.session_state.game2.load_model(f"models/{st.session_state.ai_model_2}")
+                    st.success(f"Loaded AI models: Player 1: {st.session_state.ai_model_1}, Player 2: {st.session_state.ai_model_2}")
+                except Exception as e:
+                    st.error(f"Error loading AI models: {e}")
             
             st.session_state.game_started = True
             st.rerun()
@@ -403,9 +469,9 @@ def main():
         if not st.session_state.game_over:
             if st.session_state.game_mode == 'ai_vs_ai':
                 if st.session_state.current_player == 1:
-                    st.write("### AI 1's Turn")
+                    st.write(f"### AI 1's Turn ({st.session_state.ai_model_1})")
                 else:
-                    st.write("### AI 2's Turn")
+                    st.write(f"### AI 2's Turn ({st.session_state.ai_model_2})")
                 # In AI vs AI mode, handle both AI moves with a Step button
                 if st.button("Make AI Move"):
                     if st.session_state.current_player == 1:
@@ -418,7 +484,11 @@ def main():
                 if st.session_state.current_player == st.session_state.human_player:
                     st.write("### Your Turn")
                 else:
-                    st.write("### AI's Turn")
+                    if st.session_state.game_mode == 'human_vs_ai':
+                        ai_model = st.session_state.ai_model_2
+                    else:  # ai_vs_human
+                        ai_model = st.session_state.ai_model_1
+                    st.write(f"### AI's Turn ({ai_model})")
                     # If it's AI's turn, make a move
                     make_ai_move(st.session_state.game)
                     st.rerun()
@@ -462,6 +532,8 @@ def main():
             
             # Close the container div
             st.markdown("</div>", unsafe_allow_html=True)
+
+
 
 def draw_board():
     """Draw the Connect 4 board using Streamlit"""
