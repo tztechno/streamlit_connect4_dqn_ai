@@ -397,7 +397,6 @@ def main():
     # Display the game board if a game has started
     if st.session_state.game_started:
         # Display board
-        st.write("### Connect 4 Board")
         draw_board()
         
         # Show column numbers under the board
