@@ -399,12 +399,6 @@ def main():
         # Display board
         draw_board()
         
-        # Show column numbers under the board
-        cols = st.columns(7)
-        for i, col in enumerate(cols):
-            with col:
-                st.write(f"{i}", unsafe_allow_html=True)
-        
         # Display whose turn it is or game result
         if not st.session_state.game_over:
             if st.session_state.game_mode == 'ai_vs_ai':
@@ -434,19 +428,40 @@ def main():
                 st.session_state.game_started = False
                 st.rerun()
         
-        # Column buttons for human player - more compact display
+        # Column buttons for human player - more compact display with column numbers in buttons
         if not st.session_state.game_over and st.session_state.current_player == st.session_state.human_player and st.session_state.game_mode != 'ai_vs_ai':
             valid_moves = st.session_state.game.get_valid_moves(st.session_state.board)
             
-            # Create a single row of compact buttons
-            cols = st.columns(7)
+            # Create a container with custom CSS to make buttons appear closer together
+            st.markdown("""
+            <style>
+            .button-container {
+                display: flex;
+                justify-content: center;
+                gap: 2px;  /* Reduced gap between buttons */
+            }
+            .stButton>button {
+                padding: 2px 10px;  /* Reduced padding to make buttons smaller */
+                min-width: 40px;  /* Set minimum width */
+            }
+            </style>
+            <div class="button-container">
+            """, unsafe_allow_html=True)
+            
+            # Use custom columns to place buttons closer together
+            button_container = st.container()
+            cols = button_container.columns(7, gap="small")
+            
             for col in range(7):
                 with cols[col]:
                     button_disabled = col not in valid_moves
-                    if st.button("↓", key=f"move_{col}", disabled=button_disabled):
+                    # Include column number in the button text
+                    if st.button(f"{col}↓", key=f"move_{col}", disabled=button_disabled):
                         make_human_move(col)
                         st.rerun()
-
+            
+            # Close the container div
+            st.markdown("</div>", unsafe_allow_html=True)
 
 def draw_board():
     """Draw the Connect 4 board using Streamlit"""
