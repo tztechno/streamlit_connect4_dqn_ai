@@ -161,10 +161,10 @@ class Connect4AI:
             if episode % self.target_update == 0:
                 self.target_net.load_state_dict(self.policy_net.state_dict())
             
-            if (episode + 1) % 1000 == 0:
+            if (episode + 1) % 5000 == 0:
                 print(f"Episode: {episode + 1}/{num_episodes}, Epsilon: {self.epsilon:.3f}")
                 # 特定のエピソード数ごとにモデルを保存
-                self.save_model(save_path=f"models/connect4_model_{episode+1}.pth")
+                self.save_model(save_path=f"models/connect4_model_{(episode+1):05d}.pth")
     
     def _train_step(self):
         batch = random.sample(self.memory, self.batch_size)
